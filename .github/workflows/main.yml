@@ -1,0 +1,33 @@
+name: Process and Upload Shopify CSV to GCS
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at 00:00 UTC
+  push:
+    branches: [ main ]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas numpy requests google-cloud-storage
+
+      - name: Set up Google Cloud Credentials
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        run: |
+          echo "$GCP_CREDENTIALS" > /tmp/gcp_credentials.json
+
+      - name: Run Fancy Color Processing Script and Upload File
+        run: |
+          python main_fancy.py
