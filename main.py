@@ -91,10 +91,8 @@ df.columns = [col.strip().lower() for col in df.columns]
 print("Normalized columns:", df.columns.tolist())
 
 # For Fancy Color Diamonds:
-# Exclude any record whose color value is exactly one letter.
-df = df[df['col'].str.strip().str.len() > 1]
-# Retain only diamonds certified by IGI or GIA using the 'lab' column.
-df = df[df['lab'].isin(['IGI', 'GIA'])]
+df = df[df['col'].str.strip().str.len() > 1]  # Exclude one-letter color values
+df = df[df['lab'].isin(['IGI', 'GIA'])]         # Use 'lab' column for certification
 df = df[df['image'].notnull() & (df['image'].astype(str).str.strip() != "")]
 df = df[df['video'].notnull() & (df['video'].astype(str).str.strip() != "")]
 
@@ -167,9 +165,8 @@ today_str = datetime.today().strftime("%Y%m%d")
 final_df['stock id'] = final_df.index + 1
 final_df['stock id'] = final_df['stock id'].apply(lambda x: f"NVL-{today_str}-{x:02d}")
 
-# Rename columns – note we now map 'lab' (not 'labtest') to 'LAB'
 final_df.rename(columns={
-    'lab': 'LAB',
+    'labtest': 'LAB',  # Adjust if your CSV uses 'labtest' for fancy color diamonds. Otherwise, use 'lab'.
     'reportno': 'REPORT NO',
     'FinalShape': 'Shape',
     'carats': 'Carat',
@@ -182,7 +179,6 @@ final_df.rename(columns={
     'flo': 'Fluor'
 }, inplace=True)
 
-# Write the transformed fancy color diamonds file.
 selected_output_filename = "transformed_fancy_diamonds.csv"
 final_df.to_csv(selected_output_filename, index=False)
 print(f"Selected fancy color diamonds file written with {len(final_df)} diamonds at {selected_output_filename}.")
@@ -224,7 +220,8 @@ final_df['CAD_Price'] = final_df['Price'].apply(markup).round(2)
 final_df['Compare_At_Price'] = (final_df['CAD_Price'] * 1.5).round(2)
 final_df['Ratio'] = final_df['Ratio'].round(2)
 
-custom_collection = f"Lab-Created Fancy Diamonds-{today_str}"
+# Custom Collections changed as requested.
+custom_collection = f"Lab Grown Fancy Color - {today_str}"
 
 def clean_image_url(url):
     if pd.isna(url):
