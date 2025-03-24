@@ -84,17 +84,16 @@ def clarity_matches(row_clarity, group_clarity):
     else:
         return grp == group_clarity
 
-# Import & Normalize Raw Data
+# Read CSV and normalize column names
 df = pd.read_csv(local_file, sep=',', low_memory=False,
                  dtype={'floCol': str, 'canadamarkeligible': str})
-
 df.columns = [col.strip().lower() for col in df.columns]
 print("Normalized columns:", df.columns.tolist())
 
 # For Fancy Color Diamonds:
 # Exclude any record whose color value is exactly one letter.
 df = df[df['col'].str.strip().str.len() > 1]
-# Retain only diamonds certified by IGI or GIA (using the 'lab' column).
+# Retain only diamonds certified by IGI or GIA using the 'lab' column.
 df = df[df['lab'].isin(['IGI', 'GIA'])]
 df = df[df['image'].notnull() & (df['image'].astype(str).str.strip() != "")]
 df = df[df['video'].notnull() & (df['video'].astype(str).str.strip() != "")]
@@ -111,7 +110,7 @@ df = df[df['pol'].astype(str).str.strip().str.upper().isin(['EX', 'EXCELLENT'])]
 df = df[df['symm'].astype(str).str.strip().str.upper().isin(['EX', 'EXCELLENT'])]
 df = df[df.apply(valid_cut, axis=1)]
 
-# Balanced Selection by Shape & Carat/Clarity Groups.
+# Define carat/clarity groups.
 groups = [
     {'min_carat': 0.95, 'max_carat': 1.10, 'clarity': 'VVS', 'count': 28},
     {'min_carat': 0.95, 'max_carat': 1.10, 'clarity': 'VS', 'count': 20},
@@ -168,8 +167,9 @@ today_str = datetime.today().strftime("%Y%m%d")
 final_df['stock id'] = final_df.index + 1
 final_df['stock id'] = final_df['stock id'].apply(lambda x: f"NVL-{today_str}-{x:02d}")
 
+# Rename columns – note we now map 'lab' (not 'labtest') to 'LAB'
 final_df.rename(columns={
-    'labtest': 'LAB',  # If your CSV uses 'labtest' for fancy diamonds, adjust accordingly. Otherwise, change to 'lab'.
+    'lab': 'LAB',
     'reportno': 'REPORT NO',
     'FinalShape': 'Shape',
     'carats': 'Carat',
