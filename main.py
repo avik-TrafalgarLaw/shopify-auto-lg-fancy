@@ -14,7 +14,7 @@ ftp_server = "ftp.nivoda.net"
 ftp_user = "leeladiamondscorporate@gmail.com"
 ftp_password = "r[Eu;9NB"
 remote_file = "Leela Diamond_labgrown.csv"
-local_file = "Labgrown.csv"  # Use a relative path
+local_file = "Labgrown.csv"  # Relative path
 
 try:
     with FTP(ftp_server) as ftp:
@@ -84,7 +84,7 @@ def clarity_matches(row_clarity, group_clarity):
     else:
         return grp == group_clarity
 
-# Read CSV
+# Import & Normalize Raw Data
 df = pd.read_csv(local_file, sep=',', low_memory=False,
                  dtype={'floCol': str, 'canadamarkeligible': str})
 
@@ -92,10 +92,10 @@ df.columns = [col.strip().lower() for col in df.columns]
 print("Normalized columns:", df.columns.tolist())
 
 # For Fancy Color Diamonds:
-# - Exclude records where color value (col) is exactly one letter.
+# Exclude any record whose color value is exactly one letter.
 df = df[df['col'].str.strip().str.len() > 1]
-# - Retain only diamonds certified by IGI or GIA using 'labtest' column.
-df = df[df['labtest'].isin(['IGI', 'GIA'])]
+# Retain only diamonds certified by IGI or GIA (using the 'lab' column).
+df = df[df['lab'].isin(['IGI', 'GIA'])]
 df = df[df['image'].notnull() & (df['image'].astype(str).str.strip() != "")]
 df = df[df['video'].notnull() & (df['video'].astype(str).str.strip() != "")]
 
@@ -106,12 +106,12 @@ df['Ratio'] = df.apply(compute_ratio, axis=1)
 df['Measurement'] = df.apply(compute_measurement, axis=1)
 df['v360 link'] = df['reportno'].apply(lambda x: f"https://loupe360.com/diamond/{x}/video/500/500")
 
-# Apply quality filters for fancy color diamonds.
+# Apply quality filters.
 df = df[df['pol'].astype(str).str.strip().str.upper().isin(['EX', 'EXCELLENT'])]
 df = df[df['symm'].astype(str).str.strip().str.upper().isin(['EX', 'EXCELLENT'])]
 df = df[df.apply(valid_cut, axis=1)]
 
-# Define carat/clarity groups
+# Balanced Selection by Shape & Carat/Clarity Groups.
 groups = [
     {'min_carat': 0.95, 'max_carat': 1.10, 'clarity': 'VVS', 'count': 28},
     {'min_carat': 0.95, 'max_carat': 1.10, 'clarity': 'VS', 'count': 20},
@@ -169,7 +169,7 @@ final_df['stock id'] = final_df.index + 1
 final_df['stock id'] = final_df['stock id'].apply(lambda x: f"NVL-{today_str}-{x:02d}")
 
 final_df.rename(columns={
-    'labtest': 'LAB',
+    'labtest': 'LAB',  # If your CSV uses 'labtest' for fancy diamonds, adjust accordingly. Otherwise, change to 'lab'.
     'reportno': 'REPORT NO',
     'FinalShape': 'Shape',
     'carats': 'Carat',
@@ -313,7 +313,6 @@ shopify_df = pd.DataFrame({
     "Included / United States": "TRUE"
 })
 
-# Use output file name "shopify lg-fancy-date"
 shopify_output_filename = f"shopify-lg-fancy-{today_str}.csv"
 shopify_df.to_csv(shopify_output_filename, index=False)
 print(f"Shopify upload file created with {len(shopify_df)} fancy color diamonds at {shopify_output_filename}.")
