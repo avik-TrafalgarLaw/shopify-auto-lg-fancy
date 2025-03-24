@@ -30,4 +30,4 @@ jobs:
 
       - name: Run Fancy Color Processing Script and Upload File
         run: |
-          python main.py
+          python main_fancy.py
